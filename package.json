@@ -1,0 +1,38 @@
+{
+  "name": "clipboard",
+  "version": "1.0.0",
+  "description": "node addon for clipboar use node-ffi",
+  "main": "index.js",
+  "scripts": {
+    "test": "set DEBUG=*,-not_this | mocha --reporter spec --timeout 2000 --recursive tests/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HWliao/clipboard.git"
+  },
+  "keywords": [
+    "node",
+    "ffi",
+    "clipboard",
+    "javascript"
+  ],
+  "author": "HWliao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HWliao/clipboard/issues"
+  },
+  "homepage": "https://github.com/HWliao/clipboard#readme",
+  "dependencies": {
+    "bindings": "^1.2.0",
+    "debug": "2",
+    "ffi": "^2.2.0",
+    "iconv-lite": "^0.4.18",
+    "nan": "2",
+    "ref-array": "1",
+    "ref-struct": "1"
+  },
+  "devDependencies": {
+    "chai": "^4.0.2",
+    "mocha": "^3.4.2"
+  }
+}
