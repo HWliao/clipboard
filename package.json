@@ -4,7 +4,7 @@
   "description": "node addon for clipboar use node-ffi",
   "main": "index.js",
   "scripts": {
-    "test": "set DEBUG=*,-not_this | mocha --reporter spec --timeout 2000 --recursive tests/"
+    "test": "mocha --reporter spec --timeout 2000 --recursive tests/"
   },
   "repository": {
     "type": "git",
