@@ -1,14 +1,9 @@
 /**
- * clipboardset DEBUG=*,-not_this
+ * clipboard 只实现了对文件列表的读取和写入
  * Created by lenovo on 2017/6/27.
  */
-var debug = require('debug');
-debug.log = console.info.bind(console);
-var log = debug('clipboard:index');
-log('init.');
-log('%o', {a: 1});
-setInterval(function () {
-  log('2');
-}, 1000);
+var debug = require('debug')('clipboard:index');
+var platform = require('./lib/' + process.platform);
+debug('i am index');
 
 module.exports = {};

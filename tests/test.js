@@ -1,15 +1,12 @@
 var it = require("mocha").it;
 var describe = require("mocha").describe;
 var expect = require('chai').expect;
-var winston = require('winston');
-winston.log('info', 'Hello distributed log files!');
-winston.info('Hello again distributed logs');
 
-winston.level = 'debug';
-winston.log('debug', 'Now my debug messages are written to console!');
-
+var debug = require('debug')('test:test1');
+debug('test');
 describe('Test mocha', function () {
   it('test lhw', function () {
+    debug('test');
     expect('abc').to.be.a('string');
   });
 });
