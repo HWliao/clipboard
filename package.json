@@ -4,7 +4,7 @@
   "description": "node addon for clipboar use node-ffi",
   "main": "index.js",
   "scripts": {
-    "test": "SET DEBUG=clipboard:* & mocha %NODE_DEBUG_OPTION% --bail --check-leaks --timeout 2000 --recursive tests/"
+    "test": "SET DEBUG=clipboard:* & mocha %NODE_DEBUG_OPTION% --recursive tests/"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,7 @@
 var describe = require("mocha").describe;
 var it = require("mocha").it;
 var before = require('mocha').before;
+var beforeEach = require('mocha').beforeEach;
 
 var expect = require('chai').expect;
 
@@ -32,6 +33,11 @@ describe('clipboard', function () {
   });
 
   describe('read', function () {
+
+    it('the format is not in the formats', function () {
+      var invalidFormat = 'qwrqwrsasfegqrtsdf';
+
+    });
 
   });
 
