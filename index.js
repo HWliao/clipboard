@@ -8,13 +8,15 @@ debug('init clipboar');
 
 // 支持的获取格式
 var formats = {
-  "Files": true
+  "Files": true,
+  "text/plain": true,
+  "text/html": true
 };
 debug('the formats:%o', formats);
 // 常量
 var constants = {
-  WRITE_SUCCESS: 1,
-  WRITE_FAIL: 0
+  SUCCESS: 1,
+  FAIL: 0
 };
 debug('the constants:%o', constants);
 /**
@@ -23,7 +25,7 @@ debug('the constants:%o', constants);
  */
 function read(format) {
   if (!formats[format])return;
-
+  return platform.read(format);
 }
 
 /**
@@ -33,14 +35,14 @@ function read(format) {
  * @returns {number} 成功 WRITE_SUCCESS 失败 WRITE_FAIL
  */
 function write(format, data) {
-  return constants.WRITE_SUCCESS;
+  return constants.SUCCESS;
 }
 
 /**
  * 清除剪贴板中数据
  */
 function clear() {
-  platform.clear();
+  return platform.clear() ? constants.SUCCESS : constants.FAIL;
 }
 module.exports = {
   constants: constants,
