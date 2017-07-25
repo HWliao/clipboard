@@ -45,6 +45,11 @@ CFReadHandle[TYPE_FILES] = filesReadHandle;
 
 // 剪贴板格式处理方法 写
 var CFWriteHandle = {};
+// 写入参数校验
+var verifyParamForWrite = {};
+verifyParamForWrite[TYPE_TEXT] = isText;
+verifyParamForWrite[TYPE_HTML] =
+
 
 // ==== 导出方法 ====
 function read(type) {
@@ -96,7 +101,7 @@ function getAllValidFormats() {
 }
 
 function write(type, data) {
-  // todo
+  // todo 写入有点难搞
 }
 
 function clear() {
