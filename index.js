@@ -48,8 +48,8 @@ var CFWriteHandle = {};
 // 写入参数校验
 var verifyParamForWrite = {};
 verifyParamForWrite[TYPE_TEXT] = isText;
-verifyParamForWrite[TYPE_HTML] =
-
+verifyParamForWrite[TYPE_HTML] = isText;
+verifyParamForWrite[TYPE_FILES] = isFiles;
 
 // ==== 导出方法 ====
 function read(type) {
@@ -245,4 +245,24 @@ function filesReadHandle() {
   }
   platform.kernel32.GlobalUnlock(handle);
   return result;
+}
+
+/**
+ * 判断是否为文本
+ * @param text
+ * @returns {boolean}
+ */
+function isText(text) {
+  // todo
+  return true;
+}
+
+/**
+ *
+ * @param files
+ * @returns {boolean}
+ */
+function isFiles(files) {
+  // todo
+  return true;
 }
