@@ -45,6 +45,8 @@ CFReadHandle[TYPE_FILES] = filesReadHandle;
 
 // 剪贴板格式处理方法 写
 var CFWriteHandle = {};
+CFWriteHandle[TYPE_TEXT] = textWriteHandle;
+
 // 写入参数校验
 var verifyParamForWrite = {};
 verifyParamForWrite[TYPE_TEXT] = isText;
@@ -99,9 +101,35 @@ function getAllValidFormats() {
   debug('all valid formats is %o', result);
   return result;
 }
-
+/**
+ * 根据类型往clipboard中写入数据
+ * @param type 类型
+ * @param data 数据
+ * @returns {number}
+ */
 function write(type, data) {
-  // todo 写入有点难搞
+  if (!types[type]) {
+    debug('the type %s is not in types %o', type, types);
+    return constants.FAIL;
+  }
+
+  if ((type === TYPE_TEXT || type === TYPE_HTML) && !isText(data)) {
+    debug('the type %s \'s data %o is not a string', type, data);
+    return constants.FAIL;
+  }
+  if (type === TYPE_FILES && !isFiles(data)) {
+    debug('the type %s \'s data %o is not Files');
+    return constants.FAIL;
+  }
+  if (!openClipboard()) return constants.FAIL;
+
+  var empty = platform.user32.EmptyClipboard();
+  debug('do empty %d', empty);
+  var isWrite = CFWriteHandle[type](data);
+  debug('writ type %s data %o isWrite %s', type, data, isWrite);
+
+  closeClipboard();
+  return isWrite ? constants.SUCCESS : constants.FAIL;
 }
 
 function clear() {
@@ -253,16 +281,45 @@ function filesReadHandle() {
  * @returns {boolean}
  */
 function isText(text) {
-  // todo
-  return true;
+  return typeof text === 'string';
 }
 
 /**
- *
+ * 判断文件
  * @param files
  * @returns {boolean}
  */
 function isFiles(files) {
-  // todo
-  return true;
+  return files && files.length >= 0;
+}
+
+/**
+ * 写入文本到剪贴板中
+ * @param text
+ */
+function textWriteHandle(text) {
+  var type = TYPE_TEXT, cf = typeToCF(type);
+  debug('text %s write to clipboard', text);
+  var textBuf = iconv.encode(text, 'GBK');
+  var size = textBuf.length + 1;
+
+  debug('text %s to Buffer.and szie %d', text, size);
+  // 分配一块可移动,固定大小的内存
+  var handle = platform.kernel32.GlobalAlloc(platform.GMEM.MOVEABLE, size);
+  debug('GlobalAlloc handle %d', handle);
+  if (!handle) return;
+  var gRef = platform.kernel32.GlobalLock(handle);
+  if (ref.isNull(gRef)) {
+    debug('the global lock poiter is null');
+    return;
+  }
+  // 往分配的内存中写入数据
+
+
+  platform.kernel32.GlobalUnlock(handle);
+
+  // 将handle写入到clipboard中
+  var set = platform.user32.SetClipboardData(cf, handle);
+  debug('set clip board %d', set);
+  return set;
 }
