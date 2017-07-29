@@ -46,6 +46,7 @@ CFReadHandle[TYPE_FILES] = filesReadHandle;
 // 剪贴板格式处理方法 写
 var CFWriteHandle = {};
 CFWriteHandle[TYPE_TEXT] = textWriteHandle;
+CFWriteHandle[TYPE_HTML] = htmlWriteHandle;
 
 // 写入参数校验
 var verifyParamForWrite = {};
@@ -113,12 +114,16 @@ function write(type, data) {
     return constants.FAIL;
   }
 
-  if ((type === TYPE_TEXT || type === TYPE_HTML) && !isText(data)) {
+  if (type === TYPE_TEXT && !isText(data)) {
     debug('the type %s \'s data %o is not a string', type, data);
     return constants.FAIL;
   }
   if (type === TYPE_FILES && !isFiles(data)) {
     debug('the type %s \'s data %o is not Files');
+    return constants.FAIL;
+  }
+  if (type === TYPE_HTML && !(data && isText(data.html))) {
+    debug('the type %s \'s data %o is not right', type, data);
     return constants.FAIL;
   }
   if (!openClipboard()) return constants.FAIL;
@@ -295,12 +300,14 @@ function isFiles(files) {
 
 /**
  * 写入文本到剪贴板中
- * @param text
+ * @param text 需要写入的文本
+ * @param t 类型,默认text
+ * @param encoding 编码 默认 bgk
  */
-function textWriteHandle(text) {
-  var type = TYPE_TEXT, cf = typeToCF(type);
+function textWriteHandle(text, t, encoding) {
+  var type = t || TYPE_TEXT, cf = typeToCF(type);
   debug('text %s write to clipboard', text);
-  var textBuf = iconv.encode(text, 'GBK');
+  var textBuf = iconv.encode(text, encoding || 'GBK');
   var size = textBuf.length + 1;
 
   debug('text %s to Buffer.and szie %d', text, size);
@@ -314,7 +321,11 @@ function textWriteHandle(text) {
     return;
   }
   // 往分配的内存中写入数据
-
+  debug('copy data to handle %d', handle);
+  for (var i = 0; i < size; i++) {
+    var tmpdata = ref['readUInt64' + ref.endianness](textBuf, i);
+    i === textBuf.length ? ref['writeUInt64' + ref.endianness](gRef, i, 0) : ref['writeUInt64' + ref.endianness](gRef, i, tmpdata);
+  }
 
   platform.kernel32.GlobalUnlock(handle);
 
@@ -322,4 +333,63 @@ function textWriteHandle(text) {
   var set = platform.user32.SetClipboardData(cf, handle);
   debug('set clip board %d', set);
   return set;
+}
+
+/**
+ * 写入html format数据
+ * @param data
+ */
+function htmlWriteHandle(data) {
+  if (!data || !data.html) return;
+  // 先设置一个text/plain类型
+  var text = data.text || '';
+  textWriteHandle(text);
+
+  var url = data.url || 'about:blank';
+  // 获取标准的html format的格式
+  var formatHtml = getForamtHtml(data.html, url);
+  return textWriteHandle(formatHtml, TYPE_HTML, 'utf8');
+}
+
+/**
+ * 依据标准的html format格式生成对应格式字符串
+ * @param html
+ * @param url
+ * @returns {string}
+ */
+function getForamtHtml(html, url) {
+  var version = 'Version:1.0\n';
+  var startHtml = 'StartHTML:0000000000\n';
+  var endHtml = 'EndHTML:0000000000\n';
+  var startFragment = 'StartFragment:0000000000\n';
+  var endFragment = 'EndFragment:0000000000\n';
+  var sourceURL = 'SourceURL:' + url + '\n';
+  var s = '<html>';
+
+  var e = '</body></html>';
+
+  var start, end;
+  var tmp = version + startHtml + endHtml + startFragment + endFragment + sourceURL + s;
+  start = iconv.decode(tmp, 'utf8').length;
+  tmp += '<body>' + html + e;
+  end = iconv.decode(tmp, 'utf8').length;
+
+  return [version,
+    startHtml.replace('0000000000', pad(start, 10)),
+    endHtml.replace('0000000000', pad(end, 10)),
+    startFragment.replace('0000000000', pad(start, 10)),
+    endFragment.replace('0000000000', pad(end, 10)),
+    sourceURL,
+    s,
+    '<body>' + html,
+    e].join('');
+}
+
+function pad(num, n) {
+  var len = num.toString().length;
+  while (len < n) {
+    num = "0" + num;
+    len++;
+  }
+  return num;
 }

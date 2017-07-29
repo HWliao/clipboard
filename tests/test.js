@@ -11,6 +11,7 @@ var clipboard = require('../index');
 var win32 = require('../lib/win32');
 
 var ref = require('ref');
+var iconv = require('iconv-lite');
 
 describe('clipboard', function () {
 
@@ -62,7 +63,7 @@ describe('clipboard', function () {
       expect(result.data).to.be.a('string');
     });
 
-    it.skip('text/html', function () {
+    it('text/html', function () {
       var type = 'text/html';
       var result = clipboard.read(type);
       expect(result).is.not.equal(undefined);
@@ -124,50 +125,20 @@ describe('clipboard', function () {
       expect(isWrite).is.equal(clipboard.constants.FAIL);
     });
 
-    it('text to clipboard', function () {
-//      var type = 'text/plain', data = '中文';
-//      var isWrite = clipboard.write(type, data);
-//      clipboard.getAllValidFormats();
-//      var tt = clipboard.read(type);
-//      console.log('%o', tt);
-//      expect(isWrite).is.equal(clipboard.constants.SUCCESS);
-//      var tmp = ref.allocCString('你说什么', 'utf8');
-//      console.log(tmp.toString());
-//      var pointer = ref.alloc('pointer');
-//      ref.writeCString(pointer, 0, '啥啥啥', 'utf8');
-//      var r = ref.reinterpretUntilZeros(pointer, 1, 0);
-//      console.log(r.toString());
-//      var buf = new Buffer('hello world');
-//      console.log(buf.length);
-//      var pointer = ref.ref(buf);
-//
-//      var buf2 = ref.readPointer(pointer, 0, buf.length);
-//      console.log(buf2.toString());
-//
-//
-//      console.log(buf2.address());
-//      console.log(buf.address());
+    it.skip('text/plain to clipboard', function () {
+      var type = 'text/plain', data = '我终于能写东西到剪贴板了, 请容许我大喊两句, 握草!握草!!握草!!!';
+      var isWrite = clipboard.write(type, data);
+      expect(isWrite).is.equal(clipboard.constants.SUCCESS);
+    });
 
-//      var someBuffer = new Buffer('whatever');
-//      var buf = ref.alloc('pointer');
-//      ref.writePointer(buf, 0, someBuffer);
-//
-//      var tmp = ref.readPointer(buf, 0, someBuffer.length);
-//      console.log(tmp.toString());
-
-      var buf = new Buffer(4);
-      buf.writeInt32LE(12345, 0);
-
-      console.log(buf.address());  // ← 140362165284824
-
-      buf.type = ref.types.int;
-
-      console.log(buf.deref());  // ← 12345
-
-
-      var one = buf.ref();
-
-      console.log(one.deref().deref());  // ← 12345
+    it('text/html to clipboard', function () {
+      var type = 'text/html', data = {
+        text: '测试',
+        url: 'http://www.baidu.com',
+        html: '<span style="color: red;">红色的</span>'
+      };
+      var isWrite = clipboard.write(type, data);
+      expect(isWrite).is.equal(clipboard.constants.SUCCESS);
     });
 
   });
