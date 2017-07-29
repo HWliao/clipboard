@@ -47,6 +47,7 @@ CFReadHandle[TYPE_FILES] = filesReadHandle;
 var CFWriteHandle = {};
 CFWriteHandle[TYPE_TEXT] = textWriteHandle;
 CFWriteHandle[TYPE_HTML] = htmlWriteHandle;
+CFWriteHandle[TYPE_FILES] = filesWriteHandle;
 
 // 写入参数校验
 var verifyParamForWrite = {};
@@ -349,6 +350,14 @@ function htmlWriteHandle(data) {
   // 获取标准的html format的格式
   var formatHtml = getForamtHtml(data.html, url);
   return textWriteHandle(formatHtml, TYPE_HTML, 'utf8');
+}
+
+/**
+ * 写入文件列表
+ * @param data
+ */
+function filesWriteHandle(data) {
+  // todo
 }
 
 /**

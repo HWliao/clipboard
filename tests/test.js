@@ -90,7 +90,7 @@ describe('clipboard', function () {
     });
   });
   describe('getAllValidFormats', function () {
-    it.skip('get all formats is array or is undefined', function () {
+    it('get all formats is array or is undefined', function () {
       var result = clipboard.getAllValidFormats();
       expect(result).to.satisfy(function (t) {
         return !!(Array.isArray(t) || t === undefined);
@@ -131,13 +131,19 @@ describe('clipboard', function () {
       expect(isWrite).is.equal(clipboard.constants.SUCCESS);
     });
 
-    it('text/html to clipboard', function () {
+    it.skip('text/html to clipboard', function () {
       var type = 'text/html', data = {
         text: '测试',
         url: 'http://www.baidu.com',
         html: '<span style="color: red;">红色的</span>'
       };
       var isWrite = clipboard.write(type, data);
+      expect(isWrite).is.equal(clipboard.constants.SUCCESS);
+    });
+
+    it('Files to clipboard', function () {
+      var type = 'Files', data = ['xxx'];
+      var isWrite = clipboard.write(data);
       expect(isWrite).is.equal(clipboard.constants.SUCCESS);
     });
 
