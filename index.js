@@ -323,9 +323,14 @@ function textWriteHandle(text, t, encoding) {
   }
   // 往分配的内存中写入数据
   debug('copy data to handle %d', handle);
+  var sizeRef = ref.reinterpret(gRef, size, 0);
   for (var i = 0; i < size; i++) {
-    var tmpdata = ref['readUInt64' + ref.endianness](textBuf, i);
-    i === textBuf.length ? ref['writeUInt64' + ref.endianness](gRef, i, 0) : ref['writeUInt64' + ref.endianness](gRef, i, tmpdata);
+    if (i < textBuf.length) {
+      var tmpdata = textBuf.readUInt8(i);
+      sizeRef.writeUInt8(tmpdata, i)
+    } else {
+      sizeRef.writeUInt8(0, i);
+    }
   }
 
   platform.kernel32.GlobalUnlock(handle);
@@ -357,7 +362,31 @@ function htmlWriteHandle(data) {
  * @param data
  */
 function filesWriteHandle(data) {
-  // todo
+  var endianness = ref.endianness;
+  // 1.设置剪贴板中 Preferred DropEffect 为 DROPEFFECT_COPY
+  // DWORD 对应32位无符号整数
+  var uintsize32 = ref.types.uint32.size;
+  var pdhGblEffect = platform.kernel32.GlobalAlloc(platform.GMEM.MOVEABLE, uintsize32);
+  if (!pdhGblEffect) {
+    debug('the format %s GlobalAlloc handle %d', platform.CF.PD, pdhGblEffect);
+    return;
+  }
+  var pDWDropEffect = platform.kernel32.GlobalLock(pdhGblEffect);
+  if (ref.isNull(pDWDropEffect)) {
+    debug('the format %s GlobalLock handle is NULL pointer');
+    return;
+  }
+  var pDWDropEffectTo = ref.reinterpret(pDWDropEffect, uintsize32, 0);
+  pDWDropEffectTo['writeUInt32' + endianness](platform.PD.DROPEFFECT_COPY, 0);
+  debug('Preferred DropEffect format write DROPEFFECT_COPY %o', ref.reinterpret(pDWDropEffect, uintsize32, 0));
+  platform.kernel32.GlobalUnlock(pdhGblEffect);
+  // 2.设置剪贴板中 HDROP 中数据
+
+  // 2.1 构造结构体
+  // 2.2 构造文件列表
+  // 2.3 写入内存
+  // 2.4 将handle写入剪贴板
+
 }
 
 /**
