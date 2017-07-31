@@ -90,7 +90,7 @@ describe('clipboard', function () {
     });
   });
   describe('getAllValidFormats', function () {
-    it.skip('get all formats is array or is undefined', function () {
+    it('get all formats is array or is undefined', function () {
       var result = clipboard.getAllValidFormats();
       expect(result).to.satisfy(function (t) {
         return !!(Array.isArray(t) || t === undefined);
