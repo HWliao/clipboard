@@ -141,11 +141,10 @@ describe('clipboard', function () {
       expect(isWrite).is.equal(clipboard.constants.SUCCESS);
     });
 
-    it('Files to clipboard', function () {
-      var type = 'Files', data = ['xxx'];
+    it.skip('Files to clipboard', function () {
+      var type = 'Files', data = ['C:/tmp/data/zxdd/招牌下单.xls'];
       var isWrite = clipboard.write(type, data);
       expect(isWrite).is.equal(clipboard.constants.SUCCESS);
-//      console.log(ref.types.uint32.size);
     });
 
   });

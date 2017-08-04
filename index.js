@@ -130,8 +130,8 @@ function write(type, data) {
   }
   if (!openClipboard()) return constants.FAIL;
 
-//  var empty = platform.user32.EmptyClipboard();
-//  debug('do empty %d', empty);
+  var empty = platform.user32.EmptyClipboard();
+  debug('do empty %d', empty);
   var isWrite = CFWriteHandle[type](data);
   debug('writ type %s data %o isWrite %s', type, data, isWrite);
 
@@ -261,7 +261,7 @@ function filesReadHandle() {
     debug('read the data pointer is NULL');
   } else {
     var data = [];
-
+    console.log(ref.reinterpret(gRef, 500, 0));
     var tmp = Buffer.alloc(512);
     tmp.type = ref.types.CString;
     // 获取文件列表长度
@@ -364,60 +364,79 @@ function htmlWriteHandle(data) {
  */
 function filesWriteHandle(data) {
   var endianness = ref.endianness;
-//  // 1.设置剪贴板中 Preferred DropEffect 为 DROPEFFECT_COPY
-//  // DWORD 对应32位无符号整数
-//  var uintsize32 = ref.types.uint32.size;
-//  var pdhGblEffect = platform.kernel32.GlobalAlloc(platform.GMEM.MOVEABLE, uintsize32);
-//  if (!pdhGblEffect) {
-//    debug('the format %s GlobalAlloc handle %d', platform.CF.PD, pdhGblEffect);
-//    return;
-//  }
-//  var pDWDropEffect = platform.kernel32.GlobalLock(pdhGblEffect);
-//  if (ref.isNull(pDWDropEffect)) {
-//    debug('the format %s GlobalLock handle is NULL pointer');
-//    return;
-//  }
-//  var pDWDropEffectTo = ref.reinterpret(pDWDropEffect, uintsize32, 0);
-//  pDWDropEffectTo['writeUInt32' + endianness](platform.PD.DROPEFFECT_COPY, 0);
-//  debug('Preferred DropEffect format write DROPEFFECT_COPY %o', ref.reinterpret(pDWDropEffect, uintsize32, 0));
-//  platform.kernel32.GlobalUnlock(pdhGblEffect);
+  // 1.设置剪贴板中 Preferred DropEffect 为 DROPEFFECT_COPY
+  // DWORD 对应32位无符号整数
+  var uintsize32 = ref.types.uint32.size;
+  var pdhGblEffect = platform.kernel32.GlobalAlloc(platform.GMEM.MOVEABLE, uintsize32);
+  if (!pdhGblEffect) {
+    debug('the format %s GlobalAlloc handle %d', platform.CF.PD, pdhGblEffect);
+    return;
+  }
+  var pDWDropEffect = platform.kernel32.GlobalLock(pdhGblEffect);
+  if (ref.isNull(pDWDropEffect)) {
+    debug('the format %s GlobalLock handle is NULL pointer');
+    return;
+  }
+  var pDWDropEffectTo = ref.reinterpret(pDWDropEffect, uintsize32, 0);
+  pDWDropEffectTo['writeUInt32' + endianness](platform.PD.DROPEFFECT_COPY, 0);
+  debug('Preferred DropEffect format write DROPEFFECT_COPY %o', ref.reinterpret(pDWDropEffect, uintsize32, 0));
+  platform.kernel32.GlobalUnlock(pdhGblEffect);
   // 2.设置剪贴板中 HDROP 中数据
 
   // 2.1 构造结构体
-  // 2.2 构造文件列表
-  // 2.3 写入内存
-  // 2.4 将handle写入剪贴板
-
   var POINT = Struct({
     x: ref.types.long,
     y: ref.types.long
   });
-  console.log(POINT.size);
   var DROPFILES = Struct({
     pFiles: ref.types.uint32,
     pt: POINT,
     fNC: ref.types.uint32,
     fWide: ref.types.uint32
   });
-  console.log(DROPFILES.size);
-
-  var hcfHandle = platform.user32.GetClipboardData(platform.CF.HDROP);
-  var hcfGblHandle = platform.kernel32.GlobalLock(hcfHandle);
-
-  var buf = ref.reinterpret(hcfGblHandle,20,0);
-  console.log(buf);
-  var strBuf = ref.reinterpret(hcfGblHandle,500,20);
-  console.log(strBuf);
-  console.log(iconv.decode(strBuf,'utf16'));
-  var tmp = ref.reinterpretUntilZeros(hcfGblHandle,4,20);
-  console.log(iconv.decode(tmp,'utf16'));
-
-
-
-  platform.kernel32.GlobalUnlock(hcfHandle);
-
-
-
+  var dropFiles = new DROPFILES({
+    pFiles: DROPFILES.size,
+    pt: new POINT({x: 0, y: 0}),
+    fNC: 0,
+    fWide: 1
+  });
+  // 指向结构体实例
+  var dropFilesRef = dropFiles.ref();
+  debug('create Struct POINT and DROPFILES, instance length %d', dropFilesRef.length);
+  // 2.2 构造文件列表
+  var fileStrsBuf = [];
+  for (var i = 0; i < data.length; i++) {
+    fileStrsBuf.push(iconv.encode(data[i], 'utf16', {addBOM: false}));
+    // CString 结束符 utf16 2个字节
+    fileStrsBuf.push(Buffer.alloc(2));
+  }
+  // 列表最后 还需要加入一个结束符
+  fileStrsBuf.push(Buffer.alloc(2));
+  var fileBuf = Buffer.concat(fileStrsBuf);
+  debug('create files list buf the length %d', fileBuf.length);
+  // 2.3 写入内存
+  var thebuf = Buffer.concat([dropFilesRef, fileBuf]);
+  var size = thebuf.length;
+  var hGblFiles = platform.kernel32.GlobalAlloc(platform.GMEM.MOVEABLE, size);
+  if (!hGblFiles) {
+    debug('the format %s GlobalAlloc handle %d', platform.CF.HDROP, hGblFiles);
+    return;
+  }
+  var pWDFiles = platform.kernel32.GlobalLock(hGblFiles);
+  if (ref.isNull(pWDFiles)) {
+    debug('the format %s GlobalLock pointer is NULL', platform.CF.HDROP);
+    return;
+  }
+  var pWDFilesTmp = ref.reinterpret(pWDFiles, size, 0);
+  for (var i = 0; i < thebuf.length; i++) {
+    pWDFilesTmp.writeUInt8(thebuf.readUInt8(i), i);
+  }
+  platform.kernel32.GlobalUnlock(hGblFiles);
+  // 2.4 将handle写入剪贴板
+  var setPd = platform.user32.SetClipboardData(platform.CF.PD, pdhGblEffect);
+  var setHdrop = platform.user32.SetClipboardData(platform.CF.HDROP, hGblFiles);
+  debug('set %s handle %d,set %s handel %d', platform.CF.PD, pdhGblEffect, platform.CF.HDROP, hGblFiles);
+  return setPd && setHdrop;
 }
 
 /**
