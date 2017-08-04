@@ -41,7 +41,7 @@ clipboard.clear();
 ------------
 
 ``` bash
-$ npm install clipboard
+$ npm install win32-clipboard
 ```
 
 构建
