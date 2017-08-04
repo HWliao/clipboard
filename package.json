@@ -1,6 +1,6 @@
 {
-  "name": "clipboard",
-  "version": "1.0.0",
+  "name": "win32-clipboard",
+  "version": "0.0.1",
   "description": "node addon for clipboar use node-ffi",
   "main": "index.js",
   "scripts": {
